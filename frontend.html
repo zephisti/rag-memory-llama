@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PDF Assistant</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background:#f6f8fa;
+    padding:20px;
+    max-width:600px;
+    margin:auto;
+  }
+  h1 {
+    text-align:center;
+  }
+  button, input[type="file"], input[type="text"] {
+    width:100%;
+    padding:10px;
+    margin-top:8px;
+    font-size:1.1em;
+  }
+  #result {
+    background:#fff;
+    padding:10px;
+    border-radius:4px;
+    margin-top:20px;
+    min-height:60px;
+  }
+  #memoryList {
+    margin-top:20px;
+  }
+  .memory-item {
+    padding:8px;
+    border-bottom:1px solid #ddd;
+  }
+</style>
+</head>
+<body>
+<h1>Research Assistant</h1>
+<form id="uploadForm">
+  <input type="file" id="pdfFile" accept="application/pdf" required>
+  <button type="submit">Upload PDF</button>
+</form>
+
+<form id="askForm">
+  <input type="text" id="question" placeholder="Ask a question" required>
+  <button type="submit">Ask</button>
+</form>
+
+<div id="result"></div>
+<div id="memoryList"></div>
+
+<script>
+async function loadMemory() {
+  try {
+    const r = await fetch('/memory');
+    const entries = await r.json();
+    const list = document.getElementById('memoryList');
+    list.innerHTML = '';
+    entries.forEach(e => {
+      const div = document.createElement('div');
+      div.className = 'memory-item';
+      div.textContent = `${e.question} - Score ${e.impact_score}`;
+      list.prepend(div);
+    });
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const fileInput = document.getElementById('pdfFile');
+  if (!fileInput.files.length) return;
+  const formData = new FormData();
+  formData.append('pdf', fileInput.files[0]);
+  const res = await fetch('/upload', {method:'POST', body:formData});
+  const data = await res.json();
+  alert('Uploaded ' + (data.chunks || 0) + ' chunks');
+  loadMemory();
+});
+
+document.getElementById('askForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const question = document.getElementById('question').value;
+  const res = await fetch('/ask', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({question})
+  });
+  const data = await res.json();
+  document.getElementById('result').textContent = `${data.answer}\nImpact: ${data.impact}`;
+  const div = document.createElement('div');
+  div.className = 'memory-item';
+  div.textContent = `${question} - Score ${data.impact}`;
+  document.getElementById('memoryList').prepend(div);
+});
+
+loadMemory();
+</script>
+</body>
+</html>
