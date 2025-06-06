@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+data/*.json
+data/pdf*
+data/text_chunks/*
+.env
