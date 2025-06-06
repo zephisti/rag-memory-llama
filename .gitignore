@@ -4,3 +4,4 @@ data/*.json
 data/pdf*
 data/text_chunks/*
 .env
+data/topic_frequency.png
