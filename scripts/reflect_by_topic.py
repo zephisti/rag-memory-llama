@@ -7,6 +7,11 @@ from pathlib import Path
 
 from memory_manager import extract_topic
 
+def filter_entries(entries, threshold):
+    """Return entries with impact_score >= threshold."""
+    if threshold <= 0:
+        return entries
+    return [e for e in entries if e.get("impact_score", 0) >= threshold]
 
 def load_entries(path: Path):
     if not path.exists():
@@ -58,9 +63,18 @@ def main():
         action="store_true",
         help="Show top 3 questions per topic by impact score",
     )
-    args = parser.parse_args()
 
-    entries = load_entries(args.memory_file)
+    parser.add_argument(
+        "--score-threshold",
+        type=float,
+        default=0,
+        help="Minimum impact score required to include an entry",
+    )
+args = parser.parse_args()
+
+entries = load_entries(args.memory_file)
+entries = filter_entries(entries, args.score_threshold)
+
     if not entries:
         print("No memory entries to reflect on.")
         return
