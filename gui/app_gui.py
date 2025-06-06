@@ -5,12 +5,11 @@ import os
 import threading
 import sys
 from pathlib import Path
-from uuid import uuid4
-from datetime import datetime
-import json
 import re
 
 sys.path.append(str(Path(__file__).resolve().parent.parent / "scripts"))
+
+from memory_manager import add_entry
 
 from pdf_parser import parse_pdf_to_chunks, save_chunks_to_json
 from rag_engine import get_relevant_chunks
@@ -18,7 +17,6 @@ from ollama_interface import query_llama
 
 PDF_DIR = Path("data/pdfs")
 CHUNK_DIR = Path("data/text_chunks")
-MEMORY_FILE = Path("data/memory/memory.json")
 
 class PDFUploaderApp:
     def __init__(self, root):
@@ -44,7 +42,6 @@ class PDFUploaderApp:
 
         PDF_DIR.mkdir(parents=True, exist_ok=True)
         CHUNK_DIR.mkdir(parents=True, exist_ok=True)
-        MEMORY_FILE.parent.mkdir(parents=True, exist_ok=True)
 
     def log(self, message):
         self.status_area.insert(tk.END, f"{message}\n")
@@ -103,29 +100,7 @@ class PDFUploaderApp:
         self.save_to_memory_log(query, response, summary, impact_score)
 
     def save_to_memory_log(self, question, answer, summary, impact_score=5):
-        new_entry = {
-            "id": str(uuid4()),
-            "timestamp": datetime.utcnow().isoformat(),
-            "question": question,
-            "answer": answer,
-            "summary": summary,
-            "impact_score": impact_score
-        }
-
-        if MEMORY_FILE.exists():
-            with open(MEMORY_FILE, "r", encoding="utf-8") as f:
-                try:
-                    log = json.load(f)
-                except:
-                    log = []
-        else:
-            log = []
-
-        log.append(new_entry)
-
-        with open(MEMORY_FILE, "w", encoding="utf-8") as f:
-            json.dump(log, f, indent=2, ensure_ascii=False)
-
+        add_entry(question, answer, summary, impact_score)
         self.log("💾 Memory log updated.")
 
 if __name__ == "__main__":
