@@ -63,17 +63,16 @@ def main():
         action="store_true",
         help="Show top 3 questions per topic by impact score",
     )
-
     parser.add_argument(
         "--score-threshold",
         type=float,
         default=0,
         help="Minimum impact score required to include an entry",
     )
-args = parser.parse_args()
 
-entries = load_entries(args.memory_file)
-entries = filter_entries(entries, args.score_threshold)
+    args = parser.parse_args()
+    entries = load_entries(args.memory_file)
+    entries = filter_entries(entries, args.score_threshold)
 
     if not entries:
         print("No memory entries to reflect on.")
@@ -90,3 +89,4 @@ entries = filter_entries(entries, args.score_threshold)
 
 if __name__ == "__main__":
     main()
+    
